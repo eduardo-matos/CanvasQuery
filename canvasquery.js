@@ -1,4 +1,4 @@
-/*     
+/*
   Canvas Query 0.6.0
   http://canvasquery.org
   (c) 2012-2013 http://rezoner.net
@@ -7,6 +7,8 @@
 
 cq = CanvasQuery = (function() {
 
+  var i = 0;
+  var name;
 
   window.requestAnimationFrame = (function() {
     return window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame ||
@@ -15,28 +17,30 @@ cq = CanvasQuery = (function() {
     };
   })();
 
-
   var $ = function(selector) {
-      if(arguments.length === 0) {
-        var canvas = $.createCanvas(window.innerWidth, window.innerHeight);
-        window.addEventListener("resize", function() {
-          canvas.width = window.innerWidth;
-          canvas.height = window.innerHeight;
-        });
-      } else if(typeof selector === "string") {
-        var canvas = $.createCanvas(document.querySelector(selector)[0]);
-      } else if(typeof selector === "number") {
-        var canvas = $.createCanvas(arguments[0], arguments[1]);
-      } else if(selector instanceof Image) {
-        var canvas = $.createCanvas(selector);
-      } else if(selector instanceof HTMLCanvasElement) {
-        var canvas = selector;
-      } else if(selector instanceof $.Wrapper) {
-        return selector;
-      }
 
-      return new $.Wrapper(canvas);
+    var canvas;
+
+    if(arguments.length === 0) {
+      canvas = $.createCanvas(window.innerWidth, window.innerHeight);
+      window.addEventListener("resize", function() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      });
+    } else if(typeof selector === "string") {
+      canvas = $.createCanvas(document.querySelector(selector)[0]);
+    } else if(typeof selector === "number") {
+      canvas = $.createCanvas(arguments[0], arguments[1]);
+    } else if(selector instanceof Image) {
+      canvas = $.createCanvas(selector);
+    } else if(selector instanceof HTMLCanvasElement) {
+      canvas = selector;
+    } else if(selector instanceof $.Wrapper) {
+      return selector;
     }
+
+    return new $.Wrapper(canvas);
+  };
 
   $.extend = function() {
     for(var i = 1; i < arguments.length; i++) {
@@ -46,14 +50,14 @@ cq = CanvasQuery = (function() {
     }
 
     return arguments[0];
-  }
+  };
 
   $.augment = function() {
     for(var i = 1; i < arguments.length; i++) {
       _.extend(arguments[0], arguments[i]);
       arguments[i](arguments[0]);
     }
-  }
+  };
 
   $.extend($, {
 
@@ -231,8 +235,8 @@ cq = CanvasQuery = (function() {
     blend: function(below, above, mode, mix) {
       if(typeof mix === "undefined") mix = 1;
 
-      var below = $(below);
-      var above = $(above);
+      below = $(below);
+      above = $(above);
 
       var belowCtx = below.context;
       var aboveCtx = above.context;
@@ -248,8 +252,10 @@ cq = CanvasQuery = (function() {
 
       var blendingFunction = $.blendFunctions[mode];
 
+      var i = 0;
+
       if($.specialBlendFunctions.indexOf(mode) !== -1) {
-        for(var i = 0, len = belowPixels.length; i < len; i += 4) {
+        for(i = 0, len = belowPixels.length; i < len; i += 4) {
           var rgb = blendingFunction([belowPixels[i + 0], belowPixels[i + 1], belowPixels[i + 2]], [abovePixels[i + 0], abovePixels[i + 1], abovePixels[i + 2]]);
 
           pixels[i + 0] = belowPixels[i + 0] + (rgb[0] - belowPixels[i + 0]) * mix;
@@ -260,7 +266,7 @@ cq = CanvasQuery = (function() {
         }
       } else {
 
-        for(var i = 0, len = belowPixels.length; i < len; i += 4) {
+        for(i = 0, len = belowPixels.length; i < len; i += 4) {
           var r = blendingFunction(belowPixels[i + 0], abovePixels[i + 0]);
           var g = blendingFunction(belowPixels[i + 1], abovePixels[i + 1]);
           var b = blendingFunction(belowPixels[i + 2], abovePixels[i + 2]);
@@ -466,14 +472,17 @@ cq = CanvasQuery = (function() {
   $.Wrapper = function(canvas) {
     this.context = canvas.getContext("2d");
     this.canvas = canvas;
-  }
+  };
 
   $.Wrapper.prototype = {
     appendTo: function(selector) {
+
+      var element;
+
       if(typeof selector === "object") {
-        var element = selector;
+        element = selector;
       } else {
-        var element = document.querySelector(selector);
+        element = document.querySelector(selector);
       }
 
       element.appendChild(this.canvas);
@@ -585,11 +594,12 @@ cq = CanvasQuery = (function() {
     },
 
     setHsl: function() {
+      var args;
 
       if(arguments.length === 1) {
-        var args = arguments[0];
+        args = arguments[0];
       } else {
-        var args = arguments;
+        args = arguments;
       }
 
       var data = this.context.getImageData(0, 0, this.canvas.width, this.canvas.height);
@@ -617,11 +627,12 @@ cq = CanvasQuery = (function() {
     },
 
     shiftHsl: function() {
+      var args;
 
       if(arguments.length === 1) {
-        var args = arguments[0];
+        args = arguments[0];
       } else {
-        var args = arguments;
+        args = arguments;
       }
 
       var data = this.context.getImageData(0, 0, this.canvas.width, this.canvas.height);
@@ -716,14 +727,14 @@ cq = CanvasQuery = (function() {
     threshold: function(threshold) {
       var data = this.context.getImageData(0, 0, this.canvas.width, this.canvas.height);
       var pixels = data.data;
-      var r, g, b;
+      var r, g, b, v;
 
       for(var i = 0; i < pixels.length; i += 4) {
-        var r = pixels[i];
-        var g = pixels[i + 1];
-        var b = pixels[i + 2];
-        var v = (0.2126 * r + 0.7152 * g + 0.0722 * b >= threshold) ? 255 : 0;
-        pixels[i] = pixels[i + 1] = pixels[i + 2] = v
+        r = pixels[i];
+        g = pixels[i + 1];
+        b = pixels[i + 2];
+        v = (0.2126 * r + 0.7152 * g + 0.0722 * b >= threshold) ? 255 : 0;
+        pixels[i] = pixels[i + 1] = pixels[i + 2] = v;
       }
 
       this.context.putImageData(data, 0, 0);
@@ -737,9 +748,9 @@ cq = CanvasQuery = (function() {
       var r, g, b;
 
       for(var i = 0; i < pixels.length; i += 4) {
-        pixels[i + 0] = $.limitValue((pixels[i + 0] * .393) + (pixels[i + 1] * .769) + (pixels[i + 2] * .189), 0, 255);
-        pixels[i + 1] = $.limitValue((pixels[i + 0] * .349) + (pixels[i + 1] * .686) + (pixels[i + 2] * .168), 0, 255);
-        pixels[i + 2] = $.limitValue((pixels[i + 0] * .272) + (pixels[i + 1] * .534) + (pixels[i + 2] * .131), 0, 255);
+        pixels[i + 0] = $.limitValue((pixels[i + 0] * 0.393) + (pixels[i + 1] * 0.769) + (pixels[i + 2] * 0.189), 0, 255);
+        pixels[i + 1] = $.limitValue((pixels[i + 0] * 0.349) + (pixels[i + 1] * 0.686) + (pixels[i + 2] * 0.168), 0, 255);
+        pixels[i + 2] = $.limitValue((pixels[i + 0] * 0.272) + (pixels[i + 1] * 0.534) + (pixels[i + 2] * 0.131), 0, 255);
       }
 
       this.context.putImageData(data, 0, 0);
@@ -768,9 +779,9 @@ cq = CanvasQuery = (function() {
       var self = this;
 
       function step() {
-        requestAnimationFrame(step)
+        requestAnimationFrame(step);
         callback.call(self);
-      };
+      }
 
       requestAnimationFrame(step);
 
@@ -803,8 +814,12 @@ cq = CanvasQuery = (function() {
 
     onKeyDown: function(callback) {
       document.addEventListener("keydown", function(e) {
-        if(e.which >= 48 && e.which <= 90) var keyName = String.fromCharCode(e.which).toLowerCase();
-        else var keyName = $.keycodes[e.which];
+        var keyName;
+        if(e.which >= 48 && e.which <= 90) {
+          keyName = String.fromCharCode(e.which).toLowerCase();
+        } else {
+          keyName = $.keycodes[e.which];
+        }
         callback.call(self, keyName);
       });
       return this;
@@ -812,8 +827,12 @@ cq = CanvasQuery = (function() {
 
     onKeyUp: function(callback) {
       document.addEventListener("keyup", function(e) {
-        if(e.which >= 48 && e.which <= 90) var keyName = String.fromCharCode(e.which).toLowerCase();
-        else var keyName = $.keycodes[e.which];
+        var keyName;
+        if(e.which >= 48 && e.which <= 90) {
+          keyName = String.fromCharCode(e.which).toLowerCase();
+        } else {
+          keyName = $.keycodes[e.which];
+        }
         callback.call(self, keyName);
       });
       return this;
@@ -836,24 +855,24 @@ cq = CanvasQuery = (function() {
   /* extend wrapper with drawing context methods */
 
   var methods = ["arc", "arcTo", "beginPath", "bezierCurveTo", "clearRect", "clip", "closePath", "createImageData", "createLinearGradient", "createRadialGradient", "createPattern", "drawFocusRing", "drawImage", "fill", "fillRect", "fillText", "getImageData", "isPointInPath", "lineTo", "measureText", "moveTo", "putImageData", "quadraticCurveTo", "rect", "restore", "rotate", "save", "scale", "setTransform", "stroke", "strokeRect", "strokeText", "transform", "translate"];
-  for(var i = 0; i < methods.length; i++) {
-    var name = methods[i];
+  for(i = 0; i < methods.length; i++) {
+    name = methods[i];
     $.Wrapper.prototype[name] = Function("this.context." + name + ".apply(this.context, arguments); return this;");
-  };
+  }
 
   /* create setters and getters */
 
   var properties = ["canvas", "fillStyle", "font", "globalAlpha", "globalCompositeOperation", "lineCap", "lineJoin", "lineWidth", "miterLimit", "shadowOffsetX", "shadowOffsetY", "shadowBlur", "shadowColor", "strokeStyle", "textAlign", "textBaseline"];
-  for(var i = 0; i < properties.length; i++) {
-    var name = properties[i];
+  for(i = 0; i < properties.length; i++) {
+    name = properties[i];
     $.Wrapper.prototype[name] = Function("if(arguments.length) { this.context." + name + " = arguments[0]; return this; } else { return this.context." + name + "; }");
-  };
+  }
 
   /* color */
 
   $.Color = function() {
     if(arguments.length) this.parse(arguments);
-  }
+  };
 
   $.Color.prototype = {
     parse: function(args) {
